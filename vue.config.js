@@ -32,7 +32,8 @@ module.exports = {
   productionSourceMap: false,
   devServer: {
     port: port,
-    open: true,
+    // open: true,
+    // host:'192.168.20.62'   //配置localhost为ip
     overlay: {
       warnings: false,
       errors: true
@@ -43,8 +44,11 @@ module.exports = {
         // target: 'http://139.198.152.148:8170',  //备用服务器
         // target: 'http://139.198.152.148:8200',  //备用服务器
         // target: 'http://sph-h5-api.atguigu.cn/',  //备用服务器
-        target: 'http://gmall-h5-api.atguigu.cn/',  //备用服务器
-
+        // target: 'http://gmall-h5-api.atguigu.cn/',  //备用服务器
+        // target: 'http://sph-h5-api.atguigu.cn',  //备用服务器
+        target: 'http://sph-h5-api.atguigu.cn',  //备用服务器
+        
+        
         pathRewrite: { '^/dev-api': '' }
       }
     }
