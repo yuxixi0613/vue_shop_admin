@@ -68,7 +68,7 @@ export default {
     //rule是占位的，用不用都得写，代表当前规则
     //value是输入的值
     //callback代表验证通过或不通过，是一个函数
-    //callback里若传递了错误对象，则验证不通过，若什么都不传则通过
+    //callback里若传递了参数，则验证不通过，参数一般是错误对象，若什么都不传则通过
     const validatePassword = (rule, value, callback) => {
       if (value.length < 6) {
         callback(new Error("密码长度不能小于6"));

@@ -2,7 +2,7 @@ import request from '@/utils/request'
 
 export default {
     //删除
-    remove() {
+    remove(id) {
         return request.delete(`/admin/product/baseTrademark/remove/${id}`)
     },
 
@@ -23,5 +23,8 @@ export default {
     }
 }
 
-
+//最后暴露出去的是这样的结构
+// {
+//     default:{}
+// }
 
