@@ -2,7 +2,8 @@
 
 //默认暴露的不能简写，只能这样全写
 export {default as trademark} from './trademark'
-
+export {default as attr} from './attr'
+export {default as category} from './category'
 
 //分别暴露的可以这样简写
 export * as user from './user'
