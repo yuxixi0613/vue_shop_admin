@@ -1,5 +1,5 @@
 <template>
-  <el-form :inline="true" :model="cForm">
+  <el-form :inline="true" :model="cForm" :disabled="!isShowList">
     <el-form-item label="一级分类">
       <!-- select当中的v-model收集的是选中的option的value的值 -->
       <el-select
@@ -56,6 +56,7 @@
 <script>
 export default {
   name: "CategorySelector",
+  props:['isShowList'],
   data() {
     return {
       category1List: [],
@@ -139,5 +140,5 @@ export default {
 };
 </script>
 
-<style lang="sass" scoped>
+<style lang="scss" scoped>
 </style>
