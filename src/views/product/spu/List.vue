@@ -49,13 +49,20 @@
                 icon="el-icon-info"
                 size="mini"
                 title="查看spu的sku列表"
+                @click="showSkuList(row)"
               ></HintButton>
-              <HintButton
-                type="danger"
-                icon="el-icon-delete"
-                size="mini"
-                title="删除spu"
-              ></HintButton>
+              <el-popconfirm
+                :title="`你确定要删除${row.spuName}吗？`"
+                @onConfirm="deleteSpu(row)"
+              >
+                <HintButton
+                  slot="reference"
+                  type="danger"
+                  icon="el-icon-delete"
+                  size="mini"
+                  title="删除spu"
+                ></HintButton>
+              </el-popconfirm>
             </template>
           </el-table-column>
         </el-table>
@@ -82,10 +89,36 @@
         v-show="isShowSpuForm"
         ref="spu"
         :visible.sync="isShowSpuForm"
+        @backSuccess="backSuccess"
       ></SpuForm>
 
       <!-- 这是添加sku的 -->
-      <SkuForm v-show="isShowSkuForm"></SkuForm>
+      <SkuForm
+        ref="sku"
+        :visible.sync="isShowSkuForm"
+        v-show="isShowSkuForm"
+      ></SkuForm>
+
+      <el-dialog
+        :title="`${spu.spuName}的sku列表`"
+        :visible.sync="dialogTableVisible"
+        :before-close="clearSkuList"
+      >
+        <el-table :data="skuList" v-loading="loading">
+          <el-table-column prop="skuName" label="名称"></el-table-column>
+          <el-table-column prop="price" label="价格"></el-table-column>
+          <el-table-column label="重量" prop="weight"></el-table-column>
+          <el-table-column label="默认图片">
+            <template v-slot="{ row, $index }">
+              <img
+                :src="row.skuDefaultImg"
+                alt=""
+                style="width: 100px; height: 80px"
+              />
+            </template>
+          </el-table-column>
+        </el-table>
+      </el-dialog>
     </el-card>
   </div>
 </template>
@@ -113,6 +146,11 @@ export default {
 
       //请求获取spu的分页列表数据
       spuList: [],
+
+      dialogTableVisible: false,
+      spu: {},
+      skuList: [],
+      loading: false,
     };
   },
   methods: {
@@ -155,7 +193,7 @@ export default {
     //点击添加spu按钮
     showAddSpuForm() {
       this.isShowSpuForm = true;
-      this.$refs.spu.getInitAddSpuFormData();
+      this.$refs.spu.getInitAddSpuFormData(this.cForm.category3Id);
     },
 
     //点击修改spu
@@ -167,6 +205,69 @@ export default {
     //点击添加sku按钮
     showAddSkuForm(row) {
       this.isShowSkuForm = true;
+      this.$refs.sku.getInitAddSkuFormData(
+        row,
+        this.cForm.category1Id,
+        this.cForm.category2Id
+      );
+    },
+
+    // 返回成功的回调（是添加还是修改要判断）
+    backSuccess(spuId) {
+      if (spuId) {
+        //修改
+        this.getSpuList(this.page);
+      } else {
+        //添加
+        this.getSpuList();
+      }
+    },
+
+    // 气泡确认框点击确认按钮，请求删除spu
+    async deleteSpu(row) {
+      try {
+        const result = await this.$API.spu.remove(row.id);
+        if (result.code === 20000 || result.code === 200) {
+          this.$message.success("删除spu成功");
+          this.getSpuList(this.spuList.length > 1 ? this.page : this.page - 1);
+        } else {
+          this.$message.error("删除spu失败");
+        }
+      } catch (error) {
+        this.$message.error("请求删除spu失败");
+      }
+    },
+
+    // 点击查看spu的sku列表
+    async showSkuList(row) {
+      // 点击按钮弹出dialog
+      this.dialogTableVisible = true;
+      this.spu = row; //保存spu上面要显示spu的名称
+
+      // 一开始的时候去清空数据
+      // this.skuList = [] //清空上一次的数据，如果不清空，数据回来之前，表格当中还会展示上一次的数据
+      // 发请求获取spu的sku列表
+      this.loading = true;
+
+      try {
+        const result = await this.$API.sku.getListBySpuId(row.id);
+        if (result.code === 20000 || result.code === 200) {
+          this.skuList = result.data;
+        } else {
+          this.$message.error("获取spu的sku列表失败");
+        }
+      } catch (error) {
+        this.$message.error("请求获取spu的sku列表失败");
+      }
+
+      this.loading = false;
+    },
+
+    // 在关闭dialog之前清空数据
+    clearSkuList() {
+      this.skuList = [];
+      this.dialogTableVisible = false;
+      this.loading = false;
     },
   },
 };
