@@ -30,6 +30,7 @@ import Layout from '@/layout'
  * a base page that does not have permission requirements
  * all roles can be accessed
  */
+// 常量路由 ： 配的是所有人都能操作的路由
 export const constantRoutes = [
   {
     path: '/login',
@@ -55,6 +56,14 @@ export const constantRoutes = [
     }]
   },
 
+
+
+  // 404 page must be placed at the end !!!
+  
+]
+
+// 动态（异步路由）：配的是所有的根据权限数据而动态注册的路由
+export const allAsyncRoutes = [
   {
     path: '/product',
     component: Layout,
@@ -66,32 +75,32 @@ export const constantRoutes = [
         path: 'trademark/list',
         component: () => import('@/views/product/trademark/List'),
         name: 'Trademark',
-        meta:{title:'品牌管理'}
+        meta: { title: '品牌管理' }
       },
       {
         path: 'attr/list',
         component: () => import('@/views/product/attr/List'),
         name: 'Attr',
-        meta:{title:'平台属性管理'},
+        meta: { title: '平台属性管理' },
       },
       {
         path: 'spu/list',
         component: () => import('@/views/product/spu/List'),
         name: 'Spu',
-        meta:{title:'Spu管理'}
+        meta: { title: 'Spu管理' }
       },
       {
         path: 'sku/list',
         component: () => import('@/views/product/sku/List'),
         name: 'Sku',
-        meta:{title:'Sku管理'}
+        meta: { title: 'Sku管理' }
       },
     ]
   },
-
-  // 404 page must be placed at the end !!!
-  { path: '*', redirect: '/404', hidden: true }
 ]
+
+// 任意路由：后期用户输入的随意的路由都会重定向到404页面，必须注册在路由器最后一个
+export const anyRoute = { path: '*', redirect: '/404', hidden: true }
 
 const createRouter = () => new Router({
   // mode: 'history', // require service support

@@ -1,7 +1,20 @@
 import { login, logout, getInfo } from '@/api/user'
 import { getToken, setToken, removeToken } from '@/utils/auth'
-import { resetRouter } from '@/router'
+import { resetRouter, constantRoutes, allAsyncRoutes, anyRoute } from '@/router'
+import router from '@/router';
 
+function filterAsyncRoutes(allAsyncRoutes, routeNames) {
+  let asyncRoutes = allAsyncRoutes.filter(item => {
+    if (routeNames.indexOf(item.name) !== -1) {
+      if (item.children && item.children.length) {
+        //递归调用 返回符合条件的二级路由组成的数组把原有的二级路由数组children覆盖
+        item.children = filterAsyncRoutes(item.children, routeNames)
+      }
+      return true
+    }
+  })
+  return asyncRoutes
+}
 
 //定义这个函数的用意，是返回的对象在RESET_STATE中合并覆盖
 // const getDefaultState = () => {
@@ -14,18 +27,26 @@ import { resetRouter } from '@/router'
 
 // const state = getDefaultState()
 const state = {
-  token: getToken(),  //从cookies拿token
+  // token: getToken(),  //从cookies拿token
+  token: getToken("user_token"),  //从localStorage拿token
   name: '',
-  avatar: ''
+  avatar: '',
+  buttons: [],
+  roles: [],
+  routes: [],  //这里到时候不是存储用户返回的路由name字符串组成的数组，而是后期用来存储
+  // 登录用户对应的所有路由组成的数组，是一个对象的数组，后期用来遍历生成菜单使用
 }
 
 const mutations = {
   RESET_STATE: (state) => {
     // Object.assign(state, getDefaultState()) //将后面所有的参数对象合并到第一个参数对象上
     //我们可以直接这样写
-    state.token = '',
-      state.name = '',
-      state.avatar = ''
+    state.token = ''
+    state.name = ''
+    state.avatar = ''
+    state.buttons = []
+    state.roles = []
+    state.routes = []
   },
   SET_TOKEN: (state, token) => {
     state.token = token
@@ -39,6 +60,20 @@ const mutations = {
   SET_USERINFO: (state, userInfo) => {
     state.name = userInfo.name
     state.avatar = userInfo.avatar
+    state.buttons = userInfo.buttons
+    state.roles = userInfo.roles
+  },
+
+  // 单独再来一个去存储routes，它存的不是用户的信息name字符串routes
+  SET_ROUTES(state, asyncRoutes) {
+    // state.routes存储的是用户的所有路由，目的是为了遍历生成菜单
+    state.routes = constantRoutes.concat(asyncRoutes, anyRoute)
+
+    // 动态添加注册路由到路由器里面
+    // console.log(router)
+    // addRoutes是路由器router对象的原型对象上的一个API
+    // router路由器中本来就配置了routes: constantRoutes，因此后面只需要追加另外两个路由（异步路由和任意路由）
+    router.addRoutes([...asyncRoutes, anyRoute])
   }
 }
 
@@ -66,7 +101,8 @@ const actions = {
       if (result.code === 20000 || result.code === 200) {
         const { data } = result
         commit('SET_TOKEN', data.token)   //将请求成功回来的token提交到state中
-        setToken(data.token)  //将请求成功回来的token放到Cookies中
+        // setToken(data.token)  //将请求成功回来的token放到Cookies中
+        setToken(data.token)  //将请求成功回来的token放到localStorage中
         return 'ok'
       } else {
         return Promise.reject(new Error('登录失败'))
@@ -103,6 +139,8 @@ const actions = {
       const result = await getInfo(state.token)
       if (result.code === 20000 || result.code === 200) {
         commit('SET_USERINFO', result.data)
+        // 过滤出来用户自己对应的动态路由（异步路由），不是所有的路由
+        commit('SET_ROUTES', filterAsyncRoutes(allAsyncRoutes, result.data.routes))
         return 'ok'
       } else {
         return Promise.reject(new Error('获取用户信息失败'))
